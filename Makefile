@@ -19,6 +19,13 @@ cluster-up: kind ## Create the kind cluster
 cluster-down: kind ## Delete the kind cluster
 	-$(KIND) delete cluster --name $(CLUSTER_NAME)
 
+
+.PHONY: tetragon
+tetragon: tetra
+	$(HELM) repo add cilium https://helm.cilium.io 
+	$(HELM) repo update 
+	$(HELM) upgrade --install tetragon  cilium/tetragon -n kube-system
+
 ##@ Envoy Gateway
 
 .PHONY: shared-controller-install ## Install the shared Envoy Gateway
@@ -169,7 +176,7 @@ ifeq (,$(shell which kind 2> /dev/null))
 	@{ \
 		mkdir -p $(dir $(KIND)); \
 		curl -sSLo $(KIND) https://kind.sigs.k8s.io/dl/$(KIND_VERSION)/kind-$(OS)-$(ARCH); \
-		chmod + $(KIND); \
+		chmod +x $(KIND); \
 	}
 else
 KIND = $(shell which kind)
@@ -189,5 +196,22 @@ ifeq (,$(shell which helm 2> /dev/null))
 	}
 else
 HELM = $(shell which helm)
+endif
+endif
+
+.PHONY: tetra
+TETRA = $(shell pwd)/bin/tetra
+tetra:
+ifeq (,$(wildcard $(TETRA)))
+ifeq (,$(shell which tetra 2> /dev/null))
+	@{ \
+		mkdir -p $(dir $(TETRA)); \
+		curl -sSLo $(TETRA).tar.gz  https://github.com/cilium/tetragon/releases/latest/download/tetra-$(OS)-$(ARCH).tar.gz; \
+		tar -xzf $(TETRA).tar.gz -C $(shell pwd)/bin ; \
+		chmod +x $(TETRA); \
+		PATH=$PATH:$(shell pwd)/bin; \
+	}
+else
+TETRA = $(shell which tetra)
 endif
 endif
