@@ -22,9 +22,17 @@ cluster-down: kind ## Delete the kind cluster
 
 .PHONY: tetragon
 tetragon: tetra
-	$(HELM) repo add cilium https://helm.cilium.io 
+	##$(HELM) repo add cilium https://helm.cilium.io 
 	$(HELM) repo update 
-	$(HELM) upgrade --install tetragon  cilium/tetragon -n kube-system
+	$(HELM) upgrade --install tetragon cilium/tetragon -n kube-system --set tetragon.grpc.enabled=true --set tetragon.grpc.address=localhost:54321
+
+ 
+##@ Pacman as sample app
+.PHONY: pacman
+pacman: 
+	$(HELM) repo add pacman-rancher https://austriandatalab.github.io/pacman
+	$(HELM) repo update 
+	$(HELM) upgrade --install --create-namespace -n pacman pacman-rancher/pacman-rancher
 
 ##@ Envoy Gateway
 
